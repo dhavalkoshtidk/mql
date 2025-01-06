@@ -1,7 +1,7 @@
 #include <Trade/Trade.mqh>
 CTrade trade;
 // variables
-input static double LotSize = 0.8;
+input static double LotSize = 1.0; //300
 input static double  StopLoss = 25.0;
 input static double TakeProfit = 50.0;
 double PriceBuyLimit=0;
@@ -18,6 +18,7 @@ static int BuyTimeSec = 59;
 
 //Price storage
 string AllowTrading = "on";
+double OpeningPrice = 0;
 int TradeCount = 0;
 string direction = "buy";
 string CloseTrade = "off";
@@ -36,7 +37,7 @@ void OnTimer()
   {      
      // Get the Ask price
      double Ask = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_ASK), _Digits);
-     //PriceBuyLimit = Ask - 0.30;
+     OpeningPrice = iOpen(NULL, PERIOD_M15, 0);
      
       MqlDateTime structTime;
       TimeLocal(structTime);
@@ -70,6 +71,7 @@ void OnTimer()
      if(AllowTrading == "on" && direction == "buy")
      if(CloseTrade == "off")
       if(PositionsTotal() == 0)
+      if(Ask > OpeningPrice)
       if(TradeCount < MaxTrades)
       if(timeBuy == TimeLocal())
     //  if(Ask > fibPrice)
