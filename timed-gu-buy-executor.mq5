@@ -1,7 +1,7 @@
 #include <Trade/Trade.mqh>
 CTrade trade;
 // variables
-input static double LotSize = 0.01;
+input static double LotSize = 3.0;
 input static double  StopLoss = 100.0;
 input static double TakeProfit = 200.0;
 static double PriceBuyLimit=0.6;
@@ -20,6 +20,8 @@ static int BuyTimeSec = 59;
 //Price storage
 static int TradeCount = 0;
 int ChangeCount = 0;
+int SlToRCount = 0;
+double OpeningPrice = 0;
 string AllowTrading = "on";
 string direction = "buy";
 string CloseTrade = "off";
@@ -28,7 +30,7 @@ int OnInit()
   {
 //--- create timer
    //EventSetTimer(60);
-   EventSetMillisecondTimer(100);
+   EventSetMillisecondTimer(500);
    
 //---
    return(INIT_SUCCEEDED);
@@ -38,9 +40,8 @@ void OnTimer()
   {      
       // Get the Ask price
      double Ask = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_ASK), _Digits);
-     
-     PriceBuyLimit = Ask - 3*_Point;
-     
+     OpeningPrice = iOpen(NULL, PERIOD_M15, 0);
+          
       MqlDateTime structTime;
       TimeLocal(structTime);
       
@@ -54,6 +55,7 @@ void OnTimer()
      if(AllowTrading == "on" && direction == "buy")
      if(CloseTrade == "off")
       if(PositionsTotal() == 0)
+      if(Ask > OpeningPrice)
       if(TradeCount < MaxTrades)
       if(timeBuy == TimeLocal())
       {
@@ -62,7 +64,7 @@ void OnTimer()
           TradeCount = TradeCount + 1;
       }
       CheckBuyBreakEvenStop(Ask);
-      MoveSLToOneR(Ask);
+    //  MoveSLToOneR(Ask);
       CloseTradeBeforeEvent();
 
   }
@@ -137,6 +139,7 @@ void MoveSlToTwoHPoints(double Ask)
          ChangeCount = ChangeCount + 1;
          Print(POSITION_SL);
       }
+      MoveSLToOneR(Ask);
    }
 }
 
@@ -165,11 +168,13 @@ void MoveSLToOneR(double Ask)
       
       if (_Symbol == symbol)
       if (PositionType == POSITION_TYPE_BUY)
+      if (SlToRCount < 1)
       if (PositionStopLoss > PositionBuyPrice)
       if(Ask > (PositionBuyPrice + 180*_Point))
       {
          trade.PositionModify(PositionTicket, PositionBuyPrice + 110*_Point, PositionTakeProfit);
          Print(POSITION_SL);
+         SlToRCount = SlToRCount + 1;
       }
    }
 }
