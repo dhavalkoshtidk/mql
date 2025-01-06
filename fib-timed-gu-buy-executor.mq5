@@ -1,7 +1,7 @@
 #include <Trade/Trade.mqh>
 CTrade trade;
 // variables
-input static double LotSize = 1.0;
+input static double LotSize = 3.0;
 input static double  StopLoss = 100.0;
 input static double TakeProfit = 200.0;
 static double PriceBuyLimit=0.6;
@@ -21,6 +21,7 @@ static int BuyTimeSec = 59;
 //Price storage
 static int TradeCount = 0;
 int ChangeCount = 0;
+int SlToRCount = 0;
 string AllowTrading = "on";
 string direction = "buy";
 string CloseTrade = "off";
@@ -191,11 +192,13 @@ void MoveSLToOneR(double Ask)
       
       if (_Symbol == symbol)
       if (PositionType == POSITION_TYPE_BUY)
+      if (SlToRCount < 1)
       if (PositionStopLoss > PositionBuyPrice)
       if(Ask > (PositionBuyPrice + 180*_Point))
       {
          trade.PositionModify(PositionTicket, PositionBuyPrice + 110*_Point, PositionTakeProfit);
          Print(POSITION_SL);
+         SlToRCount = SlToRCount + 1;
       }
    }
 }
