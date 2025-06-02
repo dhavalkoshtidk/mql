@@ -1,5 +1,5 @@
 #include<Trade/Trade.mqh>
-#include <Trader/Bfunctions.mqh>
+#include <Trader/functions.mqh>
 
 CTrade trade;
 
@@ -113,7 +113,9 @@ void OnTimer()
       trade.Buy(Lots, _Symbol, Ask, Ask - SlPips*_Point, Ask + ProfitPips*_Point, NULL);
       TradeCount = TradeCount + 1;
    }
+      CheckSLHit(Ask);
       CheckBuyBreakEvenStop(Ask);
+      MoveSlToTwoHPoints(Ask);
       MoveSLToOneR(Ask);
       CloseTradeBeforeEvent(closingTradingHour, closingTradingMinutes);
 }
