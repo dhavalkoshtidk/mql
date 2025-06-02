@@ -61,7 +61,7 @@ void CheckBuyBreakEvenStop(double Ask)
       ProfitablePips = NormalizeDouble((PositionTakeProfit - PositionBuyPrice)/_Point, _Digits);
       
       double BEPips = MathRound(0.5*ProfitablePips);
-      ExtraPips = MathRound(0.1*ProfitablePips);
+      ExtraPips = MathRound(0.05*ProfitablePips);
       
 
       
@@ -73,10 +73,10 @@ void CheckBuyBreakEvenStop(double Ask)
       {
          trade.PositionModify(PositionTicket, PositionBuyPrice + ExtraPips*_Point, PositionTakeProfit);
          Print(POSITION_SL);
-     
+         SendNotification("SL at Breakeven!");
       }
       
-      MoveSlToTwoHPoints(Ask);
+      
    }
 }
 
@@ -111,14 +111,15 @@ void MoveSlToTwoHPoints(double Ask)
       Print("HRProfit is ", HRProfit);
       
       if (_Symbol == symbol)
-      if (PositionType == POSITION_TYPE_BUY)
-      if (PositionStopLoss > PositionBuyPrice)
+      //if (PositionType == POSITION_TYPE_BUY)
+     // if (PositionStopLoss > PositionBuyPrice)
       if(ChangeCount < 1)
       if (Ask > (PositionBuyPrice + HRProfitPips*_Point))
       {
          trade.PositionModify(PositionTicket, PositionBuyPrice + HRProfit*_Point, PositionTakeProfit);
          ChangeCount = ChangeCount + 1;
          Print(POSITION_SL);
+         SendNotification("SL at half R!");
       }
 
    }
@@ -159,6 +160,7 @@ void MoveSLToOneR(double Ask)
          trade.PositionModify(PositionTicket, PositionBuyPrice + RProfit*_Point, PositionTakeProfit);
          Print(POSITION_SL);
          SlToRCount = SlToRCount + 1;
+         SendNotification("SL at one R!");
       }
    }
 }
@@ -185,6 +187,7 @@ void CloseTradeBeforeEvent(int CloseTimeHour, int CloseTimeMin)
                if(trade.PositionClose(PositionTicket))
                {
                   Print(__FUNCTION__, "Pos #", PositionTicket, "was closed because of close time..");
+                  SendNotification("Position was closed because of close time..");
                }
             }
          }
@@ -221,7 +224,7 @@ void CheckSellBreakEvenStop(double Bid)
       ProfitableSellPips = NormalizeDouble((PositionSellPrice - PositionTakeProfit)/_Point, _Digits);
       
       double BEPips = MathRound(0.5*ProfitableSellPips);
-      ExtraPips = MathRound(0.1*ProfitableSellPips);
+      ExtraPips = MathRound(0.05*ProfitableSellPips);
       
       
       // if chart symbol equals position symbol
@@ -232,9 +235,10 @@ void CheckSellBreakEvenStop(double Bid)
       {
          // Modify the stop loss
          trade.PositionModify(PositionTicket, PositionSellPrice - ExtraPips*_Point, PositionTakeProfit);
+         SendNotification("SL at Breakeven!");
       }
       
-      MoveSellSlToTwoHPoints(Bid);
+      
    }
  } 
  
@@ -273,6 +277,7 @@ void CheckSellBreakEvenStop(double Bid)
          trade.PositionModify(PositionTicket, PositionSellPrice - HRProfit*_Point, PositionTakeProfit);
          ChangeSellCount = ChangeSellCount + 1;
          Print(POSITION_SL);
+         SendNotification("SL at half R!");
       }
    }
 }
@@ -312,7 +317,21 @@ void MoveSellSLToOneR(double Bid)
          trade.PositionModify(PositionTicket, PositionSellPrice - RProfit*_Point, PositionTakeProfit);
          Print(POSITION_SL);
          SlToRCount = SlToRCount + 1;
+         SendNotification("SL at one R!");
       }
    }
 } 
+
+void CheckSLHit(double price)
+{
+   for(int i=PositionsTotal()-1; i>=0; i--) // count all currency pair positions
+   {
+      double PositionStopLoss = PositionGetDouble(POSITION_SL);
+      if(price == PositionStopLoss)
+      {
+         Print("Stoploss has been hit!");
+         SendNotification("Stoploss has been hit!");
+      }
+   }
+}
  
