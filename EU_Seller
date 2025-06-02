@@ -116,6 +116,7 @@ void OnTimer()
       TradeCount = TradeCount + 1;
    }
       CheckSellBreakEvenStop(Bid);
+      MoveSellSlToTwoHPoints(Bid);
       MoveSellSLToOneR(Bid);
       CloseTradeBeforeEvent(closingTradingHour, closingTradingMinutes);
 }
