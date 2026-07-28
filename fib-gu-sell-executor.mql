@@ -1,0 +1,237 @@
+#include <Trade/Trade.mqh>
+CTrade trade;
+// variables
+input static double LotSize = 0.01;
+input static double  StopLoss = 100.0;
+input static double TakeProfit = 200.0;
+static double PriceSellLimit=1.0;
+input static double MinPrice = 1.2;
+static int MaxTrades = 1;
+
+// time variables
+input static int CloseTimeHour = 14;
+input static int CloseTimeMin = 15;
+static int CloseTimeSec = 0;
+
+input static int SellTimeHour = 12;
+input static int SellTimeMin = 14;
+static int SellTimeSec = 59;
+//Price storage
+static int TradeCount = 0;
+int ChangeCount = 0;
+string AllowTrading = "on";
+string direction = "sell";
+string CloseTrade = "off";
+
+int OnInit()
+  {
+//--- create timer
+   //EventSetTimer(60);
+   EventSetMillisecondTimer(500);
+   
+//---
+   return(INIT_SUCCEEDED);
+  }
+
+void OnTimer()
+  {      
+      // get bid price
+      double Bid = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_BID), _Digits);
+      
+   //   PriceSellLimit = Bid + 3*_Point;
+     
+      MqlDateTime structTime;
+      TimeLocal(structTime);
+      
+      structTime.hour = SellTimeHour;
+      structTime.min = SellTimeMin;
+      structTime.sec = SellTimeSec;
+      
+      datetime timeSell = StructToTime(structTime);
+      
+      double high = iHigh(_Symbol, PERIOD_M15, 0);
+      double low = iLow(_Symbol, PERIOD_M15, 0);
+      double current = high - low;
+      double fibPrice = high - current*0.75;
+      
+      if(Bid < fibPrice)
+      {
+         Print("Bid price is less than fib price");
+      }
+      else
+      {
+         Print("Fib price is less than Bid price");
+      }
+    
+   Comment(Symbol(),",",EnumToString(Period()),"\n",
+           "High: "  ,DoubleToString(high,Digits()),"\n",
+           "Low: "   ,DoubleToString(low,Digits()),"\n",
+           "current:" ,DoubleToString(current,Digits()), "\n",
+           "fibPrice:" ,DoubleToString(fibPrice,Digits()), "\n"
+           );
+
+      
+      
+     if(AllowTrading == "on" && direction == "sell")
+     if(CloseTrade == "off")
+      if(PositionsTotal() == 0)
+      if(TradeCount < MaxTrades)
+      if(timeSell == TimeLocal())
+      if(Bid < fibPrice && Bid < MinPrice)
+   //   if(Bid == PriceSellLimit)
+      {
+         Print("sell limit price is----", PriceSellLimit);
+       //  if(trade.SellLimit(LotSize, PriceSellLimit, _Symbol, PriceSellLimit + StopLoss*_Point, PriceSellLimit - TakeProfit*_Point, NULL))
+         if(trade.Sell(LotSize, _Symbol, Bid, Bid + StopLoss*_Point, Bid - TakeProfit*_Point, NULL))
+         {
+            printf("Position by %s to be opened", _Symbol);
+         }
+         else {
+           printf("Error opening SELL position by %s: '%s'", _Symbol, trade.ResultComment());
+           printf("Open parameters: price=%f, SL=%f, TP=%f, ASK=%f, BID=%f, FREEZE=%f", PriceSellLimit, PriceSellLimit + StopLoss*_Point, PriceSellLimit - TakeProfit*_Point, SymbolInfoDouble(_Symbol, SYMBOL_ASK), SymbolInfoDouble(_Symbol, SYMBOL_BID), SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL));
+         }
+         TradeCount = TradeCount + 1;
+      }
+      CheckSellBreakEvenStop(Bid);
+      MoveSLToOneR(Bid);
+      CloseTradeBeforeEvent();
+  }
+  
+void CheckSellBreakEvenStop(double Bid)
+{
+   // Check all open positions for the current symbol
+   for(int i=PositionsTotal()-1; i>=0; i--)  // count all positions
+   {
+      // get the ticket number
+      ulong PositionTicket = PositionGetInteger(POSITION_TICKET);
+      
+      // get the position buy price
+      double PositionSellPrice = PositionGetDouble(POSITION_PRICE_OPEN);
+      
+      // get the position stop loss
+      double PositionStopLoss = PositionGetDouble(POSITION_SL);
+      
+      // get the position take profit
+      double PositionTakeProfit = PositionGetDouble(POSITION_TP);
+      
+      // get the position Type
+      double PositionType = PositionGetInteger(POSITION_TYPE);
+      
+      // get position symbol
+      string symbol = PositionGetSymbol(i);
+      
+      // if chart symbol equals position symbol
+      if(_Symbol == symbol)
+      if(PositionType == POSITION_TYPE_SELL)
+      if(PositionStopLoss > PositionSellPrice)
+      if(Bid < (PositionSellPrice - 100*_Point))
+      {
+         // Modify the stop loss
+         trade.PositionModify(PositionTicket, PositionSellPrice - 10.0*_Point, PositionTakeProfit);
+      }
+      
+      MoveSlToTwoHPoints(Bid);
+   }
+ } 
+ 
+ void MoveSlToTwoHPoints(double Bid)
+{
+   // check all open position for the current symbol
+   for(int i=PositionsTotal()-1; i>=0; i--) // count all currency pair positions
+   {
+      // get the ticket number
+      ulong PositionTicket = PositionGetInteger(POSITION_TICKET);
+      
+      // get the position buy price
+      double PositionSellPrice = PositionGetDouble(POSITION_PRICE_OPEN);
+      
+      // get the position stop loss
+      double PositionStopLoss = PositionGetDouble(POSITION_SL);
+      
+      // get the position take profit
+      double PositionTakeProfit = PositionGetDouble(POSITION_TP);
+      
+      // get the position Type
+      double PositionType = PositionGetInteger(POSITION_TYPE);
+      
+      // get position symbol
+      string symbol = PositionGetSymbol(i);
+      
+      if (_Symbol == symbol)
+      if (PositionType == POSITION_TYPE_SELL)
+      if (PositionStopLoss < PositionSellPrice)
+      if(ChangeCount < 1)
+      if (Bid < (PositionSellPrice - 150*_Point))
+      {
+         trade.PositionModify(PositionTicket, PositionSellPrice - 60.0*_Point, PositionTakeProfit);
+         ChangeCount = ChangeCount + 1;
+         Print(POSITION_SL);
+      }
+   }
+}
+ 
+void MoveSLToOneR(double Bid)
+{
+   // check all open position for the current symbol
+   for(int i=PositionsTotal()-1; i>=0; i--) // count all currency pair positions
+   {
+      // get the ticket number
+      ulong PositionTicket = PositionGetInteger(POSITION_TICKET);
+      
+      // get the position buy price
+      double PositionSellPrice = PositionGetDouble(POSITION_PRICE_OPEN);
+      
+      // get the position stop loss
+      double PositionStopLoss = PositionGetDouble(POSITION_SL);
+      
+      // get the position take profit
+      double PositionTakeProfit = PositionGetDouble(POSITION_TP);
+      
+      // get the position Type
+      double PositionType = PositionGetInteger(POSITION_TYPE);
+      
+      // get position symbol
+      string symbol = PositionGetSymbol(i);
+      
+      if (_Symbol == symbol)
+      if (PositionType == POSITION_TYPE_SELL)
+      if (PositionStopLoss < PositionSellPrice)
+      if (Bid < (PositionSellPrice - 180*_Point))
+      {
+         trade.PositionModify(PositionTicket, PositionSellPrice - 110.0*_Point, PositionTakeProfit);
+         Print(POSITION_SL);
+      }
+   }
+} 
+ 
+ void CloseTradeBeforeEvent()
+{
+      MqlDateTime structTime;
+      TimeLocal(structTime);
+      
+      structTime.hour = CloseTimeHour;
+      structTime.min = CloseTimeMin;
+      structTime.sec = CloseTimeSec;
+      
+      datetime timeClose = StructToTime(structTime);
+      
+      if(TimeLocal() > timeClose)
+      {
+         // close all the positions
+         for(int i=PositionsTotal()-1; i>=0; i--) // count all currency pair positions
+         {
+            ulong PositionTicket = PositionGetInteger(POSITION_TICKET);
+            if(PositionSelectByTicket(PositionTicket))
+            {
+               if(trade.PositionClose(PositionTicket))
+               {
+                  Print(__FUNCTION__, "Pos #", PositionTicket, "was closed because of close time..");
+               }
+            }
+         }
+         
+      }
+      
+      Comment("\n Server Time: ", TimeLocal(),
+               "\n Close Time: ", timeClose);
+}
