@@ -1,6 +1,3 @@
-/*#include <Trade/Trade.mqh>
-CTrade trade;*/
-
 int ChangeCount = 0;
 int ChangeSellCount = 0;
 int SlToRCount = 0;
