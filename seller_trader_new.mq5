@@ -1,5 +1,5 @@
 #include<Trade/Trade.mqh>
-#include <Trader/functions.mqh>
+#include <Trader/function-1.mqh>
 
 CTrade trade;
 
@@ -12,7 +12,7 @@ input static int closingTradingMinutes = 14;
 
 double SlPrice = 0;
 double SL = 0;
-double RiskValue = 300;
+double RiskValue = 210;
 double ProfitPips = 0;
 double SlPips = 0;
 double BePips = 0;
@@ -71,7 +71,7 @@ void OnTimer()
       RPips = 170;
       HRProfitPips = 60;
       RProfitPips = BePips;
-     // Print("SL is ", SlPrice);
+      Print("SL is ", SlPrice);
    }else
    {
       SlPrice = NormalizeDouble(MaxPrice, _Digits) + 10*_Point;
@@ -98,7 +98,7 @@ void OnTimer()
    //ObjectDelete(0,"SL Line");
      
    Lots = CalLotSize(RiskValue, SL);
-   //Print("Lotsize is : ", Lots);
+   Print("Lotsize is : ", Lots);
    SlPips = MathRound(SL / _Point);
    Print("SlPips is : ", SlPips);
    Print("Profitpips is ", ProfitPips);
