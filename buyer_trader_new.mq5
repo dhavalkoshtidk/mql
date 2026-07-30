@@ -1,14 +1,14 @@
 #include<Trade/Trade.mqh>
-#include <Trader/functions.mqh>
+#include <Trader/function-1.mqh>
 
 CTrade trade;
 
 input static int closingTradingHour = 14;
-input static int closingTradingMinutes = 15;
+input static int closingTradingMinutes = 14;
 
 double SlPrice = 0;
 double SL = 0;
-double RiskValue = 300;
+double RiskValue = 210;
 double ProfitPips = 0;
 double SlPips = 0;
 double BePips = 0;
@@ -60,7 +60,7 @@ void OnTimer()
    
    double ComparePrice = NormalizeDouble((Ask - MinPrice), _Digits);
    
-  // Print("Compare price is : ", ComparePrice);
+   Print("Compare price is : ", ComparePrice);
    if (ComparePrice <= 90*_Point)
    {
       SlPrice = Ask - 100*_Point;
@@ -96,7 +96,7 @@ void OnTimer()
    //ObjectDelete(0,"SL Line");
      
    Lots = CalLotSize(RiskValue, SL);
-   //Print("Lotsize is : ", Lots);
+   Print("Lotsize is : ", Lots);
    SlPips = MathRound(SL / _Point);
    Print("SlPips is : ", SlPips);
    Print("Profitpips is ", ProfitPips);
@@ -119,5 +119,3 @@ void OnTimer()
      // MoveSLToOneR(Ask);
       CloseTradeBeforeEvent(closingTradingHour, closingTradingMinutes);
 }
-
-
